@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useRef, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Sphere, Box, Torus, Stars } from '@react-three/drei';
 import * as THREE from 'three';
@@ -9,37 +9,38 @@ const VisualizerScene = ({ getAudioData }) => {
     const midMeshRef = useRef();
     const trebleMeshRef = useRef();
 
+    // FIX: Create color object once
+    const tempColor = useMemo(() => new THREE.Color(), []);
+
     useFrame((state, delta) => {
         const { bass, mid, treble } = getAudioData();
 
         // Bass - Central Sphere
-        // Pulse scale based on bass
         const scale = 1 + bass * 2.0;
         if (bassMeshRef.current) {
             bassMeshRef.current.scale.setScalar(scale);
-            // Slowly rotate
             bassMeshRef.current.rotation.x += delta * 0.2;
             bassMeshRef.current.rotation.y += delta * 0.3;
 
-            // Color shift
-            const color = new THREE.Color();
-            color.setHSL(0.6 + bass * 0.4, 0.8, 0.5); // Blue to purple/pink
-            bassMeshRef.current.material.color.lerp(color, 0.1);
-            bassMeshRef.current.material.emissive.lerp(color, 0.1);
+            // Color shift without creating new objects per frame
+            // HSL: Hue (0.6 + bass*0.4), Saturation 0.8, Lightness 0.5
+            tempColor.setHSL(0.6 + bass * 0.4, 0.8, 0.5);
+            bassMeshRef.current.material.color.lerp(tempColor, 0.1);
+            bassMeshRef.current.material.emissive.lerp(tempColor, 0.1);
         }
 
         // Mid - Rotating Torus Ring
         if (midMeshRef.current) {
             const midScale = 1 + mid * 0.5;
             midMeshRef.current.scale.setScalar(midScale);
-            midMeshRef.current.rotation.z += delta * (0.5 + mid * 2); // Spin faster on beat
+            midMeshRef.current.rotation.z += delta * (0.5 + mid * 2);
             midMeshRef.current.rotation.x += delta * 0.2;
         }
 
-        // Treble - Floating Cubes/Background or outer ring
-        // Let's affect the rotation speed of the whole group for treble
+        // Treble - Floating Cubes/Background
         if (trebleMeshRef.current) {
             trebleMeshRef.current.rotation.y -= delta * (0.2 + treble * 3);
+            // We could also scale them or pulse color for treble if we wanted
         }
     });
 

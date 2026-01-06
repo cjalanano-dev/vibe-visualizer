@@ -8,7 +8,9 @@ import {
   PauseIcon,
   StopIcon,
   VolumeLowIcon,
-  VolumeHighIcon
+  VolumeHighIcon,
+  SensitivityLowIcon,
+  SensitivityHighIcon
 } from './components/Icons';
 import './App.css';
 
@@ -87,7 +89,9 @@ function App() {
               </div>
 
               <div className="volume-slider-container">
-                <span className="icon-small"><VolumeLowIcon /></span>
+                <span className="icon-small">
+                  {mode === 'mic' ? <SensitivityLowIcon /> : <VolumeLowIcon />}
+                </span>
                 <input
                   type="range"
                   className="volume-slider"
@@ -96,8 +100,12 @@ function App() {
                   step="0.01"
                   value={volume}
                   onChange={handleVolumeChange}
+                  title={mode === 'mic' ? "Sensitivity" : "Volume"}
                 />
-                <span className="icon-small"><VolumeHighIcon /></span>
+                <span className="icon-small">
+                  {mode === 'mic' ? <SensitivityHighIcon /> : <VolumeHighIcon />}
+                </span>
+                {mode === 'mic' && <span className="label-text">Sensitivity</span>}
               </div>
             </div>
           )}

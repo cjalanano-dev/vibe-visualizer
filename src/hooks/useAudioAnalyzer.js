@@ -10,19 +10,21 @@ export const useAudioAnalyzer = () => {
   const gainNode = useRef(null);
   const dataArray = useRef(null);
   const source = useRef(null);
-  const mediaStream = useRef(null);
+  const mediaStream = useRef(null); // For Mic
+  const audioEl = useRef(null); // For File (Streaming)
 
   const initAudio = useCallback(() => {
     if (!audioContext.current) {
       audioContext.current = new (window.AudioContext || window.webkitAudioContext)();
       analyser.current = audioContext.current.createAnalyser();
       analyser.current.fftSize = 512;
+      analyser.current.smoothingTimeConstant = 0.8; // Smooth out the jitter
 
       gainNode.current = audioContext.current.createGain();
       gainNode.current.gain.value = volume;
 
-      gainNode.current.connect(analyser.current);
-      analyser.current.connect(audioContext.current.destination);
+      // Note: We don't connect gain->analyser here globally anymore 
+      // because connection topology differs for Mic vs File
 
       const bufferLength = analyser.current.frequencyBinCount;
       dataArray.current = new Uint8Array(bufferLength);
@@ -33,38 +35,59 @@ export const useAudioAnalyzer = () => {
     if (audioContext.current.state === 'suspended') {
       audioContext.current.resume();
     }
-    setIsPlaying(true);
-  }, [volume]);
+  }, []);
 
   // Update gain when volume state changes
   useEffect(() => {
     if (gainNode.current) {
       gainNode.current.gain.value = volume;
     }
+    if (audioEl.current) {
+      audioEl.current.volume = volume; // Direct volume control for element
+    }
   }, [volume]);
 
   const togglePlay = () => {
-    if (!audioContext.current) return;
-
-    if (audioContext.current.state === 'running') {
-      audioContext.current.suspend();
-      setIsPlaying(false);
-    } else if (audioContext.current.state === 'suspended') {
-      audioContext.current.resume();
-      setIsPlaying(true);
+    if (audioEl.current) {
+      if (audioEl.current.paused) {
+        audioEl.current.play();
+        setIsPlaying(true);
+      } else {
+        audioEl.current.pause();
+        setIsPlaying(false);
+      }
+    } else if (audioContext.current) {
+      // Fallback for Mic or non-element sources (mostly resume/suspend context)
+      if (audioContext.current.state === 'running') {
+        audioContext.current.suspend();
+        setIsPlaying(false);
+      } else if (audioContext.current.state === 'suspended') {
+        audioContext.current.resume();
+        setIsPlaying(true);
+      }
     }
   };
 
   const disconnectAudio = () => {
+    // Clean up Mic
     if (mediaStream.current) {
       mediaStream.current.getTracks().forEach(track => track.stop());
       mediaStream.current = null;
     }
+
+    // Clean up File (Audio Element)
+    if (audioEl.current) {
+      audioEl.current.pause();
+      audioEl.current.src = '';
+      audioEl.current = null;
+    }
+
+    // Clean up Source Nodes
     if (source.current) {
-      try { source.current.stop(); } catch (e) { }
       source.current.disconnect();
       source.current = null;
     }
+
     setIsPlaying(false);
   };
 
@@ -76,36 +99,39 @@ export const useAudioAnalyzer = () => {
       mediaStream.current = stream;
 
       source.current = audioContext.current.createMediaStreamSource(stream);
+
+      // Mic -> Gain -> Analyser (Do NOT connect to destination to avoid feedback)
       analyser.current.disconnect();
       source.current.connect(gainNode.current);
+      gainNode.current.connect(analyser.current);
+
+      setIsPlaying(true);
     } catch (err) {
       console.error('Error accessing microphone:', err);
       alert('Microphone access denied or not available.');
     }
-    setIsPlaying(true);
   };
 
   const connectFile = (file) => {
     disconnectAudio();
     initAudio();
-    const reader = new FileReader();
-    reader.onload = function (e) {
-      const arrayBuffer = e.target.result;
-      audioContext.current.decodeAudioData(arrayBuffer, function (buffer) {
-        source.current = audioContext.current.createBufferSource();
-        source.current.buffer = buffer;
-        source.current.loop = true;
 
-        try {
-          analyser.current.connect(audioContext.current.destination);
-        } catch (e) { /* already connected */ }
+    const url = URL.createObjectURL(file);
+    const audio = new Audio(url);
+    audio.loop = true;
+    audio.volume = volume;
+    audioEl.current = audio;
 
-        source.current.connect(gainNode.current);
-        source.current.start(0);
-        setIsPlaying(true);
-      });
-    };
-    reader.readAsArrayBuffer(file);
+    // Create Source from the DOM Element
+    source.current = audioContext.current.createMediaElementSource(audio);
+
+    // File -> Gain -> Analyser -> Destination
+    analyser.current.connect(audioContext.current.destination);
+    source.current.connect(gainNode.current);
+    gainNode.current.connect(analyser.current);
+
+    audio.play();
+    setIsPlaying(true);
   };
 
   const getAudioData = () => {
