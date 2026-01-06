@@ -1,6 +1,15 @@
 import { useState } from 'react';
 import ThreeCanvas from './components/ThreeCanvas';
 import { useAudioAnalyzer } from './hooks/useAudioAnalyzer';
+import {
+  MicIcon,
+  FolderIcon,
+  PlayIcon,
+  PauseIcon,
+  StopIcon,
+  VolumeLowIcon,
+  VolumeHighIcon
+} from './components/Icons';
 import './App.css';
 
 function App() {
@@ -53,12 +62,12 @@ function App() {
           {!mode && (
             <div className="start-menu">
               <button className="primary-btn" onClick={handleMicClick}>
-                <span className="icon">🎤</span> Live Microphone
+                <MicIcon /> Live Microphone
               </button>
 
               <div className="file-input-wrapper">
                 <button className="primary-btn">
-                  <span className="icon">📁</span> Upload Audio
+                  <FolderIcon /> Upload Audio
                 </button>
                 <input type="file" accept="audio/*" onChange={handleFileChange} />
               </div>
@@ -69,16 +78,16 @@ function App() {
             <div className="active-controls">
               <div className="control-group">
                 <button className="circle-btn" onClick={togglePlay} title={isPlaying ? "Pause" : "Play"}>
-                  {isPlaying ? '⏸' : '▶'}
+                  {isPlaying ? <PauseIcon /> : <PlayIcon />}
                 </button>
 
                 <button className="circle-btn stop-btn" onClick={handleStop} title="Stop & Exit">
-                  ⏹
+                  <StopIcon />
                 </button>
               </div>
 
               <div className="volume-slider-container">
-                <span className="icon-small">�</span>
+                <span className="icon-small"><VolumeLowIcon /></span>
                 <input
                   type="range"
                   className="volume-slider"
@@ -88,7 +97,7 @@ function App() {
                   value={volume}
                   onChange={handleVolumeChange}
                 />
-                <span className="icon-small">🔊</span>
+                <span className="icon-small"><VolumeHighIcon /></span>
               </div>
             </div>
           )}
