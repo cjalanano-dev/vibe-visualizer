@@ -168,9 +168,7 @@
   background: rgba(255, 255, 255, 0.1);
 }
 
-.circle-btn.stop-btn {
-  /* reuse small style logic but specific if needed */
-}
+/* .circle-btn.stop-btn reused small style logic */
 
 
 .volume-slider-container {
@@ -186,6 +184,7 @@
 }
 
 .volume-slider {
+  appearance: none;
   -webkit-appearance: none;
   width: 150px;
   height: 4px;
@@ -431,6 +430,7 @@
 
 .progress-slider {
   flex: 1;
+  appearance: none;
   -webkit-appearance: none;
   height: 4px;
   background: rgba(255, 255, 255, 0.2);
@@ -482,4 +482,121 @@ button:focus-visible,
 input:focus-visible {
   outline: 2px solid white;
   outline-offset: 4px;
+}
+
+/* --- Responsive Design --- */
+
+@media (max-width: 768px) {
+
+  /* Global tweaks */
+  .ui-overlay {
+    padding: 20px;
+  }
+
+  .header h1 {
+    font-size: 1.5rem;
+  }
+
+  .header p {
+    font-size: 0.75rem;
+  }
+
+  /* Start Menu adjustments */
+  .start-menu {
+    flex-direction: column;
+    width: 100%;
+    max-width: 280px;
+    gap: 16px;
+  }
+
+  .primary-btn {
+    width: 100%;
+    justify-content: center;
+    padding: 14px 24px;
+    font-size: 0.95rem;
+  }
+
+  .file-input-wrapper {
+    width: 100%;
+  }
+
+  /* Mic Capsule adjustments */
+  .mic-capsule {
+    width: 85%;
+    bottom: 24px;
+    padding: 12px 20px;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 16px;
+    border-radius: 24px;
+  }
+
+  .mic-controls {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .divider {
+    display: none;
+  }
+
+  .mic-capsule .stop-btn {
+    position: absolute;
+    top: -12px;
+    right: -12px;
+    background: #ff3b30 !important;
+    width: 32px;
+    height: 32px;
+    border: 2px solid rgba(0, 0, 0, 0.5);
+  }
+
+  /* Player Bar adjustments */
+  .player-bar {
+    height: auto;
+    min-height: 140px;
+    flex-wrap: wrap;
+    padding: 20px;
+    align-items: flex-start;
+    background: rgba(0, 0, 0, 0.9);
+  }
+
+  .track-info {
+    width: 100%;
+    flex: auto;
+    align-items: center;
+    text-align: center;
+    margin-bottom: 16px;
+    order: 1;
+    padding-right: 30px;
+    /* Make space for close button */
+  }
+
+  .player-center {
+    width: 100%;
+    flex: auto;
+    order: 2;
+  }
+
+  /* Reposition Close/Volume Section */
+  .volume-section {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    width: auto;
+    flex: initial;
+    gap: 0;
+  }
+
+  /* Hide volume slider controls on mobile to unclutter */
+  .volume-section .volume-slider,
+  .volume-section .icon-small,
+  .volume-section .divider-v {
+    display: none;
+  }
+
+  .stop-btn-bar {
+    width: 36px;
+    height: 36px;
+    background: rgba(255, 255, 255, 0.1);
+  }
 }
